@@ -1,6 +1,7 @@
 """API Client for the Labrinth (modrinth) API."""
 
 import os
+
 import requests
 
 USER_AGENT = os.getenv("USER_AGENT")

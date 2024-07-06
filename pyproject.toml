@@ -10,6 +10,7 @@ python = "^3.10"
 beautifulsoup4 = "^4.12.3"
 ruff = "^0.5.1"
 requests = "^2.32.3"
+pre-commit = "^3.7.1"
 
 
 [build-system]

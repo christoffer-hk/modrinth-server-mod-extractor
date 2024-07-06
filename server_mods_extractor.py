@@ -1,11 +1,10 @@
 """Module for parsing a mod page on Modrinth and extracting whether the mod is server side."""
 
+import json
 import pathlib
 import re
-import requests
-from bs4 import BeautifulSoup
-import json
 from time import sleep
+
 from labrinth import LabrinthAPI
 
 
