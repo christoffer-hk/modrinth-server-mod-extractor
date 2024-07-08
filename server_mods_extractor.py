@@ -60,21 +60,23 @@ def main():
 
     links = parse_markdown_links(directory, file_name)
 
-    mod_ids = [link["id"] for link in links.values()]
-
     server_side_mods = []
-    for i, mod in enumerate(mod_ids):
-        if i % 10 == 0:
-            sleep(1)
-        mod_info = modrinth_client.get_project(mod)
-        if is_server_side_mod(mod_info):
-            print(f"{mod_info['title']} is server side.")
-            server_side_mods.append(mod)
-        else:
-            print(f"{mod_info['title']} is not server side.")
+    projects = modrinth_client.get_multiple_projects(list(links.keys()))
 
-    server_mods = {links[mod]["name"]: links[mod]["url"] for mod in server_side_mods}
+    for project in projects:
+        if is_server_side_mod(project):
+            print(f"{project['title']} is server side.")
+            server_side_mods.append(project)
+        else:
+            print(f"{project['title']} is not server side.")
+
+    # output the name of the mod and the URL for it
+    server_mods = {}
+    for mod in server_side_mods:
+        server_mods[mod["title"]] = links[mod["slug"]]["url"]
     with open(directory / "server_mods.json", "w") as file:
+        # Sort dict alphabetically by the name + ignoring case:
+        server_mods = dict(sorted(server_mods.items(), key=lambda x: x[0].upper()))
         json.dump(server_mods, file, indent=4)
 
 
