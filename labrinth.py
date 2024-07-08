@@ -1,6 +1,8 @@
 """API Client for the Labrinth (modrinth) API."""
 
+import json
 import os
+import pathlib
 
 import requests
 
@@ -35,16 +37,57 @@ class LabrinthAPI:
     def get_project(self, id: str) -> dict:
         """Get a project by its ID."""
         url = f"{self.base_url}/project/{id}"
-        res = self._session.get(url).json()
+        res.raise_for_status()
+
+        data = self._session.get(url)
+        res = data.json()
         return res
 
-    def get_game_version_specific_project_version(self, id: str, game_version: str = "1.20.1") -> dict: ...
+    def get_multiple_projects(self, project_list: list[str]) -> list[dict]:
+        """Get multiple projects at once."""
+        url = f"{self.base_url}/projects"
 
-    # def get_projects(self, ids: list[str]) -> list[dict]:
-    #     """Get multiple projects by their IDs."""
-    #     url = f"{self.base_url}/projects"
-    #     res = self._session.get(url, params={"ids": ids}).json()
-    #     return res
+        # Note: Inside the [] we need each mod name
+        # to have a double quote around them, comma separated for it to work
+        params = {"ids": '["' + '","'.join(project_list) + '"]'}
+
+        res = self._session.get(url, params=params)
+        res.raise_for_status()
+
+        json = res.json()
+        return json
+
+    def get_project_version_download_url(self, project_id: str, loader=None, game_version=None, featured=None):
+        """Get the download URL for a project version.
+
+        Args:
+            project_id (str): The project ID.
+            loader (str, optional): The loader. Defaults to None. Supported values: "fabric", "forge"
+            game_version (str, optional): The game version. Defaults to None.
+            featured (bool, optional): Whether the version is featured. Defaults to False.
+        """
+        url = f"{self.base_url}/project/{project_id}/version"
+
+        # Construct query parameters
+        params = {
+            "loaders": "[" + ",".join(loader) + "]" if loader else None,
+            "game_versions": ("[" + ",".join(game_version) + "]" if game_version else None),
+            "featured": str(featured).lower() if featured is not None else None,
+        }
+
+        # Filter out None values
+        params = {k: v for k, v in params.items() if v is not None}
+
+        res = self._session.get(url, params=params)
+
+        if res.status_code != 200:
+            raise Exception("Failed to get download URL")
+        json = res.json()
+        if json is None or len(json) == 0 or json[0].get("files") is None:
+            raise Exception(f"No download URL found for project {project_id}")
+
+        download_url = json[0]["files"][0]["url"]
+        return download_url
 
 
 if __name__ == "__main__":
