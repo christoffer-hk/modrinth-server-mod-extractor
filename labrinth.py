@@ -1,8 +1,6 @@
 """API Client for the Labrinth (modrinth) API."""
 
-import json
 import os
-import pathlib
 
 import requests
 
@@ -37,9 +35,10 @@ class LabrinthAPI:
     def get_project(self, id: str) -> dict:
         """Get a project by its ID."""
         url = f"{self.base_url}/project/{id}"
-        res.raise_for_status()
 
         data = self._session.get(url)
+        data.raise_for_status()
+
         res = data.json()
         return res
 
@@ -57,21 +56,27 @@ class LabrinthAPI:
         json = res.json()
         return json
 
-    def get_project_version_download_url(self, project_id: str, loader=None, game_version=None, featured=None):
+    def get_project_version_download_url(
+        self,
+        project_id: str,
+        loader: str | None = None,
+        game_version: str | None = None,
+        featured: bool | None = None,
+    ):
         """Get the download URL for a project version.
 
         Args:
-            project_id (str): The project ID.
-            loader (str, optional): The loader. Defaults to None. Supported values: "fabric", "forge"
-            game_version (str, optional): The game version. Defaults to None.
-            featured (bool, optional): Whether the version is featured. Defaults to False.
+            project_id (str): The ID of the project.
+            loader (str, optional): The loader of the project. Example: "fabric", "forge".
+            game_version (str, optional): The game version of the project. Example: "1.19.3", "1.20.1".
+            featured (bool, optional): Whether the project is featured. Allowed: True, False.
         """
         url = f"{self.base_url}/project/{project_id}/version"
 
         # Construct query parameters
         params = {
-            "loaders": "[" + ",".join(loader) + "]" if loader else None,
-            "game_versions": ("[" + ",".join(game_version) + "]" if game_version else None),
+            "loaders": f'["{loader}"]' if loader else None,
+            "game_versions": f'["{game_version}"]' if game_version else None,
             "featured": str(featured).lower() if featured is not None else None,
         }
 
